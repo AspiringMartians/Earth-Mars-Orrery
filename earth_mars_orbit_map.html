@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Earth & Mars Orbit Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #000;
+    }
+    canvas {
+      display: block;
+      background-color: #111;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="orbitCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("orbitCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', draw);
+    resizeCanvas();
+
+    function getPlanetPosition(centerX, centerY, orbitRadius, orbitalPeriodDays, epochOffset) {
+      const now = new Date();
+      const msPerDay = 86400000;
+      const daysSinceEpoch = (now - new Date(epochOffset)) / msPerDay;
+      const angle = (2 * Math.PI * daysSinceEpoch) / orbitalPeriodDays;
+      return {
+        x: centerX + orbitRadius * Math.cos(angle),
+        y: centerY + orbitRadius * Math.sin(angle),
+        angle: angle
+      };
+    }
+
+    function drawLabel(text, x, y) {
+      ctx.fillStyle = "#fff";
+      ctx.font = "16px 'Space Mono', monospace";
+      const textWidth = ctx.measureText(text).width;
+      ctx.fillText(text, x - textWidth / 2, y - 18);
+    }
+
+    function draw() {
+      resizeCanvas();
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const baseUnit = Math.min(canvas.width, canvas.height) / 6;
+      const earthOrbitRadius = baseUnit;
+      const marsOrbitRadius = 2 * baseUnit;
+      const moonOrbitRadius = 0.3 * baseUnit;
+      const phobosOrbitRadius = 0.3 * baseUnit;
+      const deimosOrbitRadius = 0.45 * baseUnit;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "#555";
+      ctx.beginPath(); ctx.arc(centerX, centerY, earthOrbitRadius, 0, 2 * Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(centerX, centerY, marsOrbitRadius, 0, 2 * Math.PI); ctx.stroke();
+
+      ctx.fillStyle = "#ffcc00";
+      ctx.beginPath(); ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI); ctx.fill();
+
+      const earth = getPlanetPosition(centerX, centerY, earthOrbitRadius, 365.25, '2025-01-01');
+      ctx.fillStyle = "#3fa9f5";
+      ctx.beginPath(); ctx.arc(earth.x, earth.y, 14, 0, 2 * Math.PI); ctx.fill();
+      drawLabel("Earth", earth.x, earth.y);
+
+      const moon = getPlanetPosition(earth.x, earth.y, moonOrbitRadius, 27.3, '2025-01-01');
+      ctx.strokeStyle = "#333";
+      ctx.beginPath(); ctx.arc(earth.x, earth.y, moonOrbitRadius, 0, 2 * Math.PI); ctx.stroke();
+      ctx.fillStyle = "#aaa";
+      ctx.beginPath(); ctx.arc(moon.x, moon.y, 5, 0, 2 * Math.PI); ctx.fill();
+      drawLabel("Moon", moon.x, moon.y);
+
+      const mars = getPlanetPosition(centerX, centerY, marsOrbitRadius, 687, '2025-01-01');
+      ctx.fillStyle = "#ed2534";
+      ctx.beginPath(); ctx.arc(mars.x, mars.y, 14, 0, 2 * Math.PI); ctx.fill();
+      drawLabel("Mars", mars.x, mars.y);
+
+      const phobos = getPlanetPosition(mars.x, mars.y, phobosOrbitRadius, 0.3189, '2025-01-01');
+      ctx.strokeStyle = "#333";
+      ctx.beginPath(); ctx.arc(mars.x, mars.y, phobosOrbitRadius, 0, 2 * Math.PI); ctx.stroke();
+      ctx.fillStyle = "#ccc";
+      ctx.beginPath(); ctx.arc(phobos.x, phobos.y, 4, 0, 2 * Math.PI); ctx.fill();
+      drawLabel("Phobos", phobos.x, phobos.y);
+
+      const deimos = getPlanetPosition(mars.x, mars.y, deimosOrbitRadius, 1.263, '2025-01-01');
+      ctx.beginPath(); ctx.arc(mars.x, mars.y, deimosOrbitRadius, 0, 2 * Math.PI); ctx.stroke();
+      ctx.fillStyle = "#888";
+      ctx.beginPath(); ctx.arc(deimos.x, deimos.y, 4, 0, 2 * Math.PI); ctx.fill();
+      drawLabel("Deimos", deimos.x, deimos.y);
+
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const year = now.getFullYear();
+      const timeDateString = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+      ctx.fillStyle = "#ccc";
+      ctx.font = "42px 'Space Mono', monospace";
+      ctx.fillText(timeDateString, 20, canvas.height - 40);
+    }
+
+    document.fonts.ready.then(() => {
+      draw();
+      setInterval(draw, 1000 * 60 * 60);
+    });
+  </script>
+</body>
+</html>
